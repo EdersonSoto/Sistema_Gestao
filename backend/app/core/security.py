@@ -7,10 +7,13 @@ import secrets
 import time
 from dataclasses import dataclass
 
+from app.core.config import get_settings
 
 HASH_ITERATIONS = 210000
-TOKEN_TTL_SECONDS = 60 * 60 * 8
-SECRET_KEY = "dev-secret-change-me"
+
+
+def _settings():
+    return get_settings()
 
 
 def hash_password(password: str, salt: str | None = None) -> str:
@@ -33,7 +36,7 @@ def verify_password(password: str, stored_hash: str) -> bool:
 def create_token(subject: str) -> str:
     issued_at = str(int(time.time()))
     payload = f"{subject}:{issued_at}"
-    signature = hmac.new(SECRET_KEY.encode(), payload.encode(), hashlib.sha256).digest()
+    signature = hmac.new(_settings().secret_key.encode(), payload.encode(), hashlib.sha256).digest()
     token = f"{payload}:{base64.urlsafe_b64encode(signature).decode()}"
     return base64.urlsafe_b64encode(token.encode()).decode()
 
@@ -49,11 +52,12 @@ def decode_token(token: str) -> TokenData | None:
         decoded = base64.urlsafe_b64decode(token.encode()).decode()
         subject, issued_at_raw, signature = decoded.rsplit(":", 2)
         payload = f"{subject}:{issued_at_raw}"
-        expected = hmac.new(SECRET_KEY.encode(), payload.encode(), hashlib.sha256).digest()
+        expected = hmac.new(_settings().secret_key.encode(), payload.encode(), hashlib.sha256).digest()
         if not hmac.compare_digest(base64.urlsafe_b64encode(expected).decode(), signature):
             return None
         issued_at = int(issued_at_raw)
-        if time.time() - issued_at > TOKEN_TTL_SECONDS:
+        now = time.time()
+        if issued_at > now + 60 or now - issued_at > _settings().token_ttl_seconds:
             return None
         return TokenData(subject=subject, issued_at=issued_at)
     except (ValueError, UnicodeDecodeError, base64.binascii.Error):

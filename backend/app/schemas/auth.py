@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -31,4 +33,4 @@ class UserCreate(BaseModel):
     full_name: str = Field(min_length=3, max_length=150)
     username: str = Field(min_length=3, max_length=50)
     password: str = Field(min_length=6, max_length=128)
-    role: str = Field(default="operator", max_length=50)
+    role: Literal["admin", "operator"] = "operator"

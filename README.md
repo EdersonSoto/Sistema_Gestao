@@ -2,7 +2,7 @@
 
 Base inicial do projeto web **Sistema de Gestão**, desenvolvido pela **Soto Company**.
 
-Esta etapa cria a fundação do sistema:
+Esta etapa cria a fundação do projeto:
 
 - Backend com **FastAPI**
 - Frontend inicial com **HTML, CSS, JavaScript e Bootstrap 5**
